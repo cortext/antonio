@@ -1,8 +1,8 @@
 Benchmark
-=====
+=
 
 Datatable
------
+===
 Plugin [JQUERY] [Datatable http://www.datatables.net/]:
 Import:
 -----------------
@@ -31,7 +31,7 @@ No export
 
  	
 Google Fusion Tables
------
+===
 [Fusion API] [https://developers.google.com/fusiontables/]
 
 Import:
@@ -93,7 +93,7 @@ Export
 - PDF ZIP
 
 Splunk
------
+===
 Source code proprietary
 [Splunk] [http://demos.splunk.com/]
 
@@ -131,7 +131,7 @@ Export
 - XML
 
 ELK Stack
------
+===
 [Elastic Search] [http://www.elasticsearch.org/overview/]
 
 Import:
