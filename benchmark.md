@@ -4,6 +4,7 @@ Benchmark
 Datatable
 ===
 Plugin [JQUERY] [Datatable http://www.datatables.net/]:
+`Jquery`
 Import:
 -----------------
 - Input sources types:
@@ -33,6 +34,7 @@ No export
 Google Fusion Tables
 ===
 [Fusion API] [https://developers.google.com/fusiontables/]
+`SQL`
 
 Import:
 -----------------
@@ -62,6 +64,9 @@ Export
 
 Overview
 -----
+[Overview] [https://www.overviewproject.org/]
+`Scala`
+
 Import:
 -----------------
 - CSV
@@ -96,6 +101,7 @@ Splunk
 ===
 Source code proprietary
 [Splunk] [http://demos.splunk.com/]
+`Python`
 
 Import:
 -----------------
@@ -133,6 +139,8 @@ Export
 ELK Stack
 ===
 [Elastic Search] [http://www.elasticsearch.org/overview/]
+`Node.js`
+`Python`
 
 Import:
 -----------------
