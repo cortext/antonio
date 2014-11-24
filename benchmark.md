@@ -3,8 +3,10 @@ Benchmark
 
 Datatable
 ===
-Plugin [JQUERY] [Datatable http://www.datatables.net/]:
+Plugin [JQUERY]  <Datatable| http://www.datatables.net/>
+
 `Jquery`
+
 Import:
 -----------------
 - Input sources types:
@@ -34,6 +36,7 @@ No export
 Google Fusion Tables
 ===
 [Fusion API] [https://developers.google.com/fusiontables/]
+
 `SQL`
 
 Import:
@@ -65,6 +68,7 @@ Export
 Overview
 -----
 [Overview] [https://www.overviewproject.org/]
+
 `Scala`
 
 Import:
