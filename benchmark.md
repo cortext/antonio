@@ -3,9 +3,9 @@ Benchmark
 
 Datatable
 ===
-Plugin [JQUERY]  <Datatable| http://www.datatables.net/>
+Plugin [JQUERY] Datatable [http://www.datatables.net/]
 
-`Jquery`
+`Javascript` `Jquery`
 
 Import:
 -----------------
