@@ -1,9 +1,17 @@
 Benchmark
 =
+Existing solution to implement Antonio:
+
+1. Datatable #datatable
+2. Google Fusion Table 
+3. Overview
+4. Splunk
+5. Elastic Search + Logstash + Kibana
+
 
 Datatable
 ===
-Plugin [JQUERY] Datatable [http://www.datatables.net/]
+[Datatable](http://www.datatables.net/ "Datatable")
 
 `Javascript` `Jquery`
 
@@ -35,9 +43,9 @@ No export
  	
 Google Fusion Tables
 ===
-[Fusion API] [https://developers.google.com/fusiontables/]
+[Fusion API](https://developers.google.com/fusiontables/)
 
-`SQL`
+`SQL``AJAX`
 
 Import:
 -----------------
@@ -67,7 +75,7 @@ Export
 
 Overview
 -----
-[Overview] [https://www.overviewproject.org/]
+[Overview](https://www.overviewproject.org/)
 
 `Scala`
 
@@ -104,7 +112,7 @@ Export
 Splunk
 ===
 Source code proprietary
-[Splunk] [http://demos.splunk.com/]
+[Splunk](http://demos.splunk.com/)
 `Python`
 
 Import:
@@ -142,7 +150,7 @@ Export
 
 ELK Stack
 ===
-[Elastic Search] [http://www.elasticsearch.org/overview/]
+[Elastic Search](http://www.elasticsearch.org/overview/)
 `Node.js`
 `Python`
 
