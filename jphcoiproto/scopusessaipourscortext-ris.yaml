@@ -1,0 +1,12 @@
+alltables: [Abstract, Adress, Author, Cited_Authors, Cited_Journal, Cited_Ref, Cited_Years, DocumentType, Journal, Keywords, Rawcitation, Time Steps, Title, city, cluster, country, details, lab, projection, projection_cluster_Author_Author, url, Abstract, Adress, Author, Cited_Authors, Cited_Journal, Cited_Ref, Cited_Years, DocumentType, Journal, Keywords, Rawcitation, Time Steps, Title, city, cluster, country, details, lab, projection, projection_cluster_Author_Author, url]
+corpus_type: ris (scopus)
+custom_period: [Standard Periods]
+extension: db
+file: /srv/local/web/cortext/manager/projects/jphcoi_cop_fr/cop-explorer/data/scopusessaipourscortext-ris~53390/1/scopusessaipourscortext-ris.db
+indexed: false
+origin: dataset
+structure: reseaulu
+tablenames: [Abstract, Adress, Author, Cited_Authors, Cited_Journal, Cited_Ref, Cited_Years, DocumentType, Journal, Keywords, Rawcitation, Time Steps, Title, city, cluster, country, details, lab, projection, projection_cluster_Author_Author, url]
+textual_fields: [Abstract, Adress, Author, Cited_Authors, Cited_Journal, Cited_Ref, Cited_Years, DocumentType, Journal, Keywords, Rawcitation, Time Steps, Title, city, cluster, country, details, lab, projection, projection_cluster_Author_Author, url]
+totaltables: [city, Author, ISIpubdate, country, Journal, Title, lab, Cited_Authors, url, Cited_Years, Cited_Ref, details, Cited_Journal, DocumentType, Keywords, Rawcitation, Adress, Abstract, clusters, sqlite_sequence, projection, projection_cluster_Author_Author, cluster]
+uri: scopusessaipourscortext-ris

@@ -1,0 +1,49 @@
+######## analisys ######################################
+###########################################################
+
+
+script:
+  name: corpus_explorer.py
+  desc: Exploring Corpora in a tabular environment
+  type: data exploration
+  author: 'jean-philippe cointet'
+  tags: ['table','filter','interface']
+  documentation: http://docs.cortext.net/corpus_explorer/
+  inputs:
+   -
+      type: db
+      structure: reseaulu
+      type: sqlite
+
+  outputs:
+    -
+      type: json
+      name: visu
+      structure: protovis
+  outputs:
+    -
+      type: gexf
+      name: visu
+      structure: sigma
+      
+
+##
+############## Paramètres du scripts (construction du formulaire utilisateur et variables renvoyées aux script) ############
+##
+section:
+  sect1:
+    label: Fields Selection
+    order: 1
+    required: yes
+    opened: yes
+    params:
+      authorized_tables:
+        label: Fields to be shown
+        help: Select the fields you wish to view in the exploring interface
+        type: list
+        required: yes
+        widget:     
+          source: descriptor
+          multiple: yes
+          expanded: yes
+          choices: totaltables
