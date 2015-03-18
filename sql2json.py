@@ -13,6 +13,8 @@ logging.basicConfig(file="sqlconvert.log", format=FORMAT, level=logging.DEBUG)
 __doc__='''Utility to mapping SQL file into a JSON file'''
 # for test purpose
 result_path = "./"
+#for test purpose: from form selected TABLES
+SELECTED_TABLES = []
 
 class SQLConverter(object):
 	def __init__(self, filename):
@@ -20,7 +22,6 @@ class SQLConverter(object):
 		self.conn = sqlite3.connect(filename)
 		self.filename = filename
 		self.dbname = re.sub("\.db", "", filename)
-		self.tables = self.get_tables()
 		self.data = {}
 
 	def __connect__(self, filename):
@@ -34,10 +35,15 @@ class SQLConverter(object):
 		logging.info("Closing connection to db %s" %self.filename)
 		return self.conn.close()
 
-	def get_tables(self):
+	def list_tables(self):
+		'''list all autorized tables that has id and data in it and are in SELECTED_TABLE'''
 		curs = self.conn.cursor()
 		curs.execute("SELECT * FROM sqlite_master WHERE type='table';")
-		self.tables = [t[1] for t in curs.fetchall()]
+		#print len([t[1] for t in curs.fetchall()])
+		self.tables = list()
+		for t in curs.fetchall():
+			if bool(set(self.get_keys(t[1])) & set(['data', 'id'])) and t[1] not SELECTED_TABLES:
+				self.tables.append(t[1])
 		return self.tables
 
 	def get_values(self,key, table):
@@ -154,5 +160,6 @@ class SQLConverter(object):
 
 
 if __name__=="__main__":
-	db = SQLConverter("cop-clean.db")
-	db.populate()
+	pass
+	#~ db = SQLConverter("cop-clean.db")
+	#~ db.populate()
