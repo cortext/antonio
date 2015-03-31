@@ -16,14 +16,17 @@ result_path = "./"
 #for test purpose: from form selected TABLES
 SELECTED_TABLES = []
 
+
 class SQLConverter(object):
 	def __init__(self, filename):
 		'''connect to db using .db file'''
 		self.conn = sqlite3.connect(filename)
 		self.filename = filename
-		self.dbname = re.sub("\.db", "", filename)
+		self.db_name = re.split("/|\.",filename)[-2]
 		self.data = {}
-
+		#into MONGODB
+		self.db = Database(self.db_name)
+		
 	def __connect__(self, filename):
 		try:
 			self.conn = sqlite3.connect(filename)
@@ -42,11 +45,15 @@ class SQLConverter(object):
 		#print len([t[1] for t in curs.fetchall()])
 		self.tables = list()
 		for t in curs.fetchall():
-			if bool(set(self.get_keys(t[1])) & set(['data', 'id'])) and t[1] not SELECTED_TABLES:
+			print "Examining", t[1]
+			#print set(self.get_keys(t[1]))
+			data = set(self.get_keys(t[1]))
+			if set(["data", "id"]) <= data:
 				self.tables.append(t[1])
 		return self.tables
 
-	def get_values(self,key, table):
+	def get_values(self, key, table):
+		'''given a key in a table access to the value'''
 		curs = self.conn.cursor()
 		cmd = "SELECT %s FROM %s;" %(key,table)
 		curs.execute(cmd)
@@ -54,6 +61,7 @@ class SQLConverter(object):
 		return self.values
 
 	def get_keys(self, table):
+		'''given a table get the keys (headers of the table)'''
 		curs = self.conn.cursor()
 		cmd = "SELECT sql from sqlite_master WHERE type = 'table' and name = '%s';" %table
 		curs.execute(cmd)
@@ -73,19 +81,38 @@ class SQLConverter(object):
 					for k in k.split(","):
 						self.data_type.append(" ")
 		return self.keys
-
-	def get_data(self,table):
-		self.data_list= []
-		curs = self.conn.cursor()
-		cmd = "SELECT id,data FROM %s" %(table)
-		try:
-			curs.execute(cmd)
-			self.data_list = [(n[0], n[1]) for n in curs.fetchall()]
-			return self.data_list
-		except sqlite3.OperationalError as e:
-			logging.info(e)
-			return None
-
+		
+	def get_data_table(self, table):
+		'''given a selected table return a dict of key (header) and value of the table'''
+		data = []
+		headers = []
+		keys = self.get_keys(table)
+		
+		keys_h = ",".join(keys)
+		#headers.append((table, len(keys), keys_h))
+		curs = self.conn.cursor()	
+		cmd = "SELECT %s FROM %s" %(keys_h, table)
+		#try:
+		curs.execute(cmd)
+		for values in curs.fetchall():
+			data.append(dict(zip(keys, values)))
+		return data
+			
+	def convert(self):
+		'''join the data given an id mapp or aggregation?'''
+		self.db.create_coll("results")
+		for id in self.db.data.distinct("id"):
+			for data in self.db.data.find({"id": id}):
+				print data
+			break	
+			
+	def get_data(self):
+		'''for now it insert raw file into MongoDB'''
+		self.db.create_coll("data")
+		for table in self.tables:
+			self.db.data.insert(self.get_data_table(table))
+		return self.db.data.count()
+			
 	def populate_items(self, _id, table):
 		output = {}
 		curs = self.conn.cursor()
