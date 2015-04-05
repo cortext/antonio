@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #file:corpus_explorer.py
 
+import sys
 import re, sqlite3
 from sqlite3 import *
 import logging
@@ -30,7 +31,7 @@ class DBConvertor(object):
 				logging.info("Connecting activated")
 				return (self.conn, self.cursor)
 			except:
-				logging.warning("Failed to connect to dbfile %s. No such a file" %self.db_path)
+				logging.warning("Failed to connect to db %s. No such a file" %self.db_path)
 				sys.exit()
 		else:
 			try:
@@ -73,25 +74,50 @@ class DBConvertor(object):
 		'''select only authorized table that contains data and id'''
 		logging.info("filter tables")
 		self.build_schema()
+
 		for xtable, tbl_name in enumerate(self.tables):
-			if set(["data", "id"]) <= set(self.schema[tbl_name].keys()):
+			print tbl_name
+			if len(self.schema[tbl_name].keys()) == 0:
 				self.tables.pop(xtable)
+				print "OUI"
+			else:
+				keys_list = set(self.schema[tbl_name].keys())
+				if set(["data", "id"]) <= keys_list:
+					self.tables.pop(xtable)
+					print "NOn"
 		return self.tables
 
 	def convert(self):
+		logging.info("Convert")
 		if self.type == "sqlite":
 			return self.convert2json()
 		else:
 			return self.convert2sqlite()
 	def convert2json(self):
-		logging.info("building db values to JSON")
+		logging.info("Convert to JSON")
+		print len(self.tables)
 		self.data = defaultdict(dict)
+		self.filter_tables()
+		print len(self.tables)
 		for tbl_name in self.tables:
-			#correspond a mon id
-			print tbl_name
-			ids = "SELECT id, data FROM %s" %tbl_name
-			for id,data in self.cursor.execute(ids):
-				self.data[id][tbl_name] = data
+
+			ids = "SELECT id,data FROM %s" %tbl_name
+			try:
+				for xid,data in self.cursor.execute(ids):
+					self.data[xid][tbl_name] = data
+					#print self.data[xid]
+			except sqlite3.OperationalError:
+				print "mapping %s" %tbl_name
+				print self.schema[tbl_name].keys()
+				ids = "SELECT * FROM %s" %tbl_name
+
+				for xid, data in enumerate(self.cursor.execute(ids)):
+					#print type(data)
+					pass
+					#self.data[xid][tbl_name] = data
+				#print self.data[xid]
+					#print zip(self.schema[tbl_name].keys(), list(xid))
+
 		return self.data
 
 	def convert2sqlite(self):
@@ -105,7 +131,6 @@ class DBConvertor(object):
 			self.tables_list = []
 			for t in self.cursor.execute("SELECT * FROM sqlite_master WHERE type='table'"):
 				self.tables.append(t[2])
-			self.filter_tables()
 			if len(self.tables)  == 0:
 				logging.warning("Database is empty!")
 				sys.exit()
@@ -120,8 +145,8 @@ class DBConvertor(object):
 		return self.tables
 
 def main():
-	db = DBConvertor("./example.db")
+	db = DBConvertor("./cop-clean.db")
 	db.__connect__()
 	db.select_tables()
-	print db.convert()
+	db.convert()
 main()
