@@ -22,22 +22,25 @@ class DBConvertor(object):
 
 	def __connect__(self):
 		'''retrieving cursor for database'''
+		logging.info("Connecting to db %s" %self.db_path)
 		if self.type == "sqlite":
 			try:
 				self.conn = sqlite3.connect(self.db_path)
 				self.cursor = self.conn.cursor()
+				logging.info("Connecting activated")
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to dbfile %s. No such a file" %self.db_path)
-				return False
+				sys.exit()
 		else:
 			try:
 				self.conn = MongoClient('mongodb://localhost,localhost:27017')
 				self.cursor = self.conn[str(self.db_name)]
+				logging.info("Connecting activated")
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to dbfile %s. No such a file" %self.db_path)
-				return False
+				sys.exit()
 
 	def __close__(self):
 		'''close current connection'''
@@ -69,17 +72,23 @@ class DBConvertor(object):
 	def filter_tables(self):
 		'''select only authorized table that contains data and id'''
 		logging.info("filter tables")
-		self.get_schema()
+		self.build_schema()
 		for xtable, tbl_name in enumerate(self.tables):
 			if set(["data", "id"]) <= set(self.schema[tbl_name].keys()):
 				self.tables.pop(xtable)
 		return self.tables
 
+	def convert(self):
+		if self.type == "sqlite":
+			return self.convert2json()
+		else:
+			return self.convert2sqlite()
 	def convert2json(self):
 		logging.info("building db values to JSON")
 		self.data = defaultdict(dict)
 		for tbl_name in self.tables:
 			#correspond a mon id
+			print tbl_name
 			ids = "SELECT id, data FROM %s" %tbl_name
 			for id,data in self.cursor.execute(ids):
 				self.data[id][tbl_name] = data
@@ -97,10 +106,16 @@ class DBConvertor(object):
 			for t in self.cursor.execute("SELECT * FROM sqlite_master WHERE type='table'"):
 				self.tables.append(t[2])
 			self.filter_tables()
+			if len(self.tables)  == 0:
+				logging.warning("Database is empty!")
+				sys.exit()
 		else:
 			#to verify
-			for k in (self.cursor.find()).iterkeys():
-				self.tables.append(k)#to verify
+			for t in (self.cursor.find()).iterkeys():
+				self.tables.append(t)#to verify
+			if len(self.tables)  == 0:
+				logging.warning("Database is empty!")
+				sys.exit()
 			#self.tables_list = self.cursor.distinct("table")
 		return self.tables
 
@@ -108,5 +123,5 @@ def main():
 	db = DBConvertor("./example.db")
 	db.__connect__()
 	db.select_tables()
-	print db.map_values()
+	print db.convert()
 main()
