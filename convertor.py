@@ -76,15 +76,17 @@ class DBConvertor(object):
 		self.build_schema()
 
 		for xtable, tbl_name in enumerate(self.tables):
-			print tbl_name
-			if len(self.schema[tbl_name].keys()) == 0:
+			keys_list = set(self.schema[tbl_name].keys())
+			print tbl_name, self.filter <= keys_list, keys_list
+			if len(keys_list) == 0:
+				print "removing", tbl_name
 				self.tables.pop(xtable)
-				print "OUI"
+			elif self.filter <= keys_list:
+			#	print self.filter <= keys_list, tbl_name, keys_list
+				pass
 			else:
-				keys_list = set(self.schema[tbl_name].keys())
-				if set(["data", "id"]) <= keys_list:
-					self.tables.pop(xtable)
-					print "NOn"
+				print "removing", tbl_name
+				self.tables.pop(xtable)
 		return self.tables
 
 	def convert(self):
@@ -100,20 +102,39 @@ class DBConvertor(object):
 		self.filter_tables()
 		print len(self.tables)
 		for tbl_name in self.tables:
-
+			keys = self.schema[tbl_name].keys()
 			ids = "SELECT id,data FROM %s" %tbl_name
 			try:
 				for xid,data in self.cursor.execute(ids):
 					self.data[xid][tbl_name] = data
 					#print self.data[xid]
 			except sqlite3.OperationalError:
-				print "mapping %s" %tbl_name
-				print self.schema[tbl_name].keys()
+				#not necessary maybe but trying either
 				ids = "SELECT * FROM %s" %tbl_name
 
 				for xid, data in enumerate(self.cursor.execute(ids)):
-					#print type(data)
-					pass
+					keys[0] = "id"
+					subdata = dict()
+					for k,v in zip(keys,data):
+
+						try:
+							sub_data= re.split(";|:", v)
+							if len(sub_data) == 1:
+								subdata[k] = v
+							else:
+								for i,n in enumerate(sub_data):
+									if i%2 == 1:
+										subdata[sub_data[i-1]] = n
+								
+						except Exception as e:
+							print e
+							print "Test Error", data
+							subdata[xid] = data
+					self.data[xid][tbl_name] = subdata
+					print self.data[xid][tbl_name]
+							#print k,v
+						#self.data[xid][tbl_name] = k:v}
+						#print self.data[xid]
 					#self.data[xid][tbl_name] = data
 				#print self.data[xid]
 					#print zip(self.schema[tbl_name].keys(), list(xid))
