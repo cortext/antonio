@@ -138,6 +138,7 @@ class DBConvertor(object):
 			#self.tables_list = self.cursor.distinct("table")
 		return self.tables
 
+
 def main():
 	db = DBConvertor("./cop-clean.db")
 	db.__connect__()
