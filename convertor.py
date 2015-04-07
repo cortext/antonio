@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(file="corpus_expo.log", format=FORMAT, level=logging.INFO)
 
-class DBConvertor(object):
+class Db(object):
 	def __init__(self, filepath):
 		self.db_path = filepath
 		if self.db_path.split(".")[-1] == "db":
@@ -32,7 +32,7 @@ class DBConvertor(object):
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to db %s. No such a file" %self.db_path)
-				sys.exit()
+				return False
 		else:
 			try:
 				self.conn = MongoClient('mongodb://localhost,localhost:27017')
@@ -41,7 +41,7 @@ class DBConvertor(object):
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to dbfile %s. No such a file" %self.db_path)
-				sys.exit()
+				return False
 
 	def __close__(self):
 		'''close current connection'''
@@ -111,11 +111,12 @@ class DBConvertor(object):
 					#print self.data[xid]
 			except sqlite3.OperationalError:
 				#not necessary maybe but trying either
-				print "error mapping ", tbl_name
+				logging.warning("error mapping %s" %tbl_name)
 				pass
+		self.__close__()
 		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
 		return self.json_data
-		
+
 	def convert2sqlite(self):
 		logging.info("building db values to SQLITE")
 		return NotImplemented
@@ -129,21 +130,21 @@ class DBConvertor(object):
 				self.tables.append(t[2])
 			if len(self.tables)  == 0:
 				logging.warning("Database is empty!")
-				sys.exit()
+				return False
 		else:
 			#to verify
 			for t in (self.cursor.find()).iterkeys():
 				self.tables.append(t)#to verify
 			if len(self.tables)  == 0:
 				logging.warning("Database is empty!")
-				sys.exit()
+				return False
 			#self.tables_list = self.cursor.distinct("table")
 		return self.tables
 
 
-def main():
-	db = DBConvertor("./cop-clean.db")
-	db.__connect__()
-	db.select_tables()
-	db.convert()
-main()
+# def main():
+# 	db = DBConvertor("./cop-clean.db")
+# 	db.__connect__()
+# 	db.select_tables()
+# 	db.convert()
+# main()
