@@ -110,35 +110,8 @@ class DBConvertor(object):
 					#print self.data[xid]
 			except sqlite3.OperationalError:
 				#not necessary maybe but trying either
-				ids = "SELECT * FROM %s" %tbl_name
-
-				for xid, data in enumerate(self.cursor.execute(ids)):
-					keys[0] = "id"
-					subdata = dict()
-					for k,v in zip(keys,data):
-
-						try:
-							sub_data= re.split(";|:", v)
-							if len(sub_data) == 1:
-								subdata[k] = v
-							else:
-								for i,n in enumerate(sub_data):
-									if i%2 == 1:
-										subdata[sub_data[i-1]] = n
-								
-						except Exception as e:
-							print e
-							print "Test Error", data
-							subdata[xid] = data
-					self.data[xid][tbl_name] = subdata
-					print self.data[xid][tbl_name]
-							#print k,v
-						#self.data[xid][tbl_name] = k:v}
-						#print self.data[xid]
-					#self.data[xid][tbl_name] = data
-				#print self.data[xid]
-					#print zip(self.schema[tbl_name].keys(), list(xid))
-
+				print "error mapping ", tbl_name
+				pass
 		return self.data
 
 	def convert2sqlite(self):
