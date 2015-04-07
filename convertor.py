@@ -96,6 +96,7 @@ class DBConvertor(object):
 		else:
 			return self.convert2sqlite()
 	def convert2json(self):
+		import json
 		logging.info("Convert to JSON")
 		print len(self.tables)
 		self.data = defaultdict(dict)
@@ -112,8 +113,9 @@ class DBConvertor(object):
 				#not necessary maybe but trying either
 				print "error mapping ", tbl_name
 				pass
-		return self.data
-
+		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
+		return self.json_data
+		
 	def convert2sqlite(self):
 		logging.info("building db values to SQLITE")
 		return NotImplemented
