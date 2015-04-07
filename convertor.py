@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-#file:corpus_explorer.py
+#file:convertor.py
 
 import sys
 import re, sqlite3
