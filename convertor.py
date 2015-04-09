@@ -14,12 +14,16 @@ logging.basicConfig(file="corpus_expo.log", format=FORMAT, level=logging.INFO)
 class Db(object):
 	def __init__(self, filepath):
 		self.db_path = filepath
-		if self.db_path.split(".")[-1] == "db":
+
+		path_name = self.db_path.split(".")
+
+		if path_name[-1] == "db":
 			self.type = "sqlite"
 			self.filter = set(["data", "id"])
 		else:
 			self.type = "json"
-		self.db_name = re.split("/|\.",filepath)[-2]
+		path_name.pop(-1)
+		self.name = (" ").join(path_name)
 
 	def __connect__(self):
 		'''retrieving cursor for database'''
@@ -28,7 +32,7 @@ class Db(object):
 			try:
 				self.conn = sqlite3.connect(self.db_path)
 				self.cursor = self.conn.cursor()
-				logging.info("Connecting activated")
+				logging.info("Contact establihed! Hold on!")
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to db %s. No such a file" %self.db_path)
@@ -37,7 +41,7 @@ class Db(object):
 			try:
 				self.conn = MongoClient('mongodb://localhost,localhost:27017')
 				self.cursor = self.conn[str(self.db_name)]
-				logging.info("Connecting activated")
+				logging.info("Connection activated. Please ")
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to dbfile %s. No such a file" %self.db_path)
@@ -98,24 +102,27 @@ class Db(object):
 	def convert2json(self):
 		import json
 		logging.info("Convert to JSON")
-		print len(self.tables)
 		self.data = defaultdict(dict)
 		self.filter_tables()
-		print len(self.tables)
 		for tbl_name in self.tables:
-			keys = self.schema[tbl_name].keys()
+			#keys = self.schema[tbl_name].keys()
 			ids = "SELECT id,data FROM %s" %tbl_name
 			try:
-				for xid,data in self.cursor.execute(ids):
-					self.data[xid][tbl_name] = data
+				for row_id,data in self.cursor.execute(ids):
+					self.data[row_id][tbl_name] = data
 					#print self.data[xid]
 			except sqlite3.OperationalError:
-				#not necessary maybe but trying either
+				#not necessary ???
 				logging.warning("error mapping %s" %tbl_name)
 				pass
-		self.__close__()
-		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
-		return self.json_data
+
+		self.json_data = json.dumps(self.data,sort_keys=False,indent=4)
+		with open(self.name, "w") as f:
+			f.write(self.json_data)
+
+		#self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
+		#self.__close__()
+		return self.data
 
 	def convert2sqlite(self):
 		logging.info("building db values to SQLITE")
