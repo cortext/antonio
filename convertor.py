@@ -14,6 +14,7 @@ logging.basicConfig(file="corpus_expo.log", format=FORMAT, level=logging.INFO)
 
 class Db(object):
 	def __init__(self, filepath, name=None):
+		logging.info("Init DB with type filter and filename")
 		self.db_path = filepath
 		path_name = re.split(re.compile("\.|\/"), self.db_path)
 		self.name = path_name[-2]
@@ -23,9 +24,11 @@ class Db(object):
 
 	def __connect__(self):
 		'''retrieving cursor for database'''
+
 		logging.info("Connecting to db %s" %self.db_path)
 		if self.type == "sqlite":
 			try:
+				logging.info("Connecting to SQLITE DB")
 				self.conn = sqlite3.connect(self.db_path)
 				self.cursor = self.conn.cursor()
 				logging.info("Contact establihed! Hold on!")
@@ -35,12 +38,13 @@ class Db(object):
 				return False
 		else:
 			try:
+				logging.info("Connecting to MongoDB")
 				#using Database Object
 				self.conn = Database(self.db_name)
 				self.cursor = self.conn.use_coll("data")
 				#self.conn = MongoClient('mongodb://localhost,localhost:27017')
 				#self.cursor = self.conn[str(self.db_name)]
-				print self.cursor
+				#print self.cursor
 				logging.info("Connection activated. Please HOLD ON!")
 				return (self.conn, self.cursor)
 			except:
@@ -55,6 +59,7 @@ class Db(object):
 
 	def exists(self):
 		''' check if JSON version has already been created '''
+		logging.info("Checking if Db already exists")
 		db = Database(self.name)
 		try:
 			if db.data.count() > 0:
@@ -66,10 +71,11 @@ class Db(object):
 				return False
 
 	def build_schema(self):
-		sorted_keys = OrderedDict()
+		'''build schema information from SQLITE'''
+		self.select_tables()
 		if self.type == "sqlite":
 			logging.info("building db schema from sqlite to JSON")
-			self.schema = defaultdict(sorted_key)
+			self.schema = defaultdict(dict)
 			for table in self.tables:
 				cmd = "SELECT sql from sqlite_master WHERE type = 'table' and name = '%s';" %table
 				keys = [line[0] for line in self.cursor.execute(cmd)]
@@ -81,6 +87,7 @@ class Db(object):
 					if values is not None:
 						for n in re.finditer("(\s)?(?P<key>\w*)\s(?P<type>\w*)", values):
 							self.schema[table][n.group('key')] = n.group('type')
+			print "KEYS\n"
 			return self.schema
 		if self.type == "json":
 			logging.info("building db schema from JSON to sqlite")
@@ -90,65 +97,77 @@ class Db(object):
 	def filter_tables(self):
 		'''select only authorized table that contains data and id'''
 		logging.info("filter tables")
-		self.build_schema()
-
 		for xtable, tbl_name in enumerate(self.tables):
 			keys_list = set(self.schema[tbl_name].keys())
-			print tbl_name, self.filter <= keys_list, keys_list
+			#print tbl_name, self.filter <= keys_list, keys_list
 			if len(keys_list) == 0:
-				print "removing", tbl_name
+				#print "removing", tbl_name
 				self.tables.pop(xtable)
 			elif self.filter <= keys_list:
 			#	print self.filter <= keys_list, tbl_name, keys_list
 				pass
 			else:
-				print "removing", tbl_name
+				#print "removing", tbl_name
 				self.tables.pop(xtable)
 		return self.tables
 
 	def convert(self):
 		logging.info("Convert")
 		if self.type == "sqlite":
-			if self.exists() is False:
-				return self.convert2json()
-			else:
-				self.send2MongoDB()
+			#if self.exists() is False:
+			return self.convert2json()
+			# else:
+			# 	self.send2MongoDB()
 		else:
 			return self.convert2sqlite()
 
 	def convert2json(self):
+		'''create json_data and data'''
 		import json
 		logging.info("Convert to JSON")
-		self.data = defaultdict(OrderedDict())
+		self.data = defaultdict(dict)
 		self.filter_tables()
-		for tbl_name in self.tables:
-			#keys = self.schema[tbl_name].keys()
-			ids = "SELECT id,data FROM %s" %tbl_name
-			try:
-				for row_id,data in self.cursor.execute(ids):
-					self.data[row_id][tbl_name] = data
-					#print self.data[xid]
-			except sqlite3.OperationalError:
-				#not necessary ???
-				logging.warning("error mapping %s" %tbl_name)
-				pass
-		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
+		tbls = ",".join(self.schema.keys())
+		first_value = self.schema.keys()[0]
+		ids = "SELECT * FROM %s GROUP BY %s INNER JOIN" %(first_value,first_value, tbls, first_value)
+		try:
+			for data in self.cursor.execute(ids):
+				print data
+		except Exception as e:
+			print e
+			pass
+		# for tbl_name in self.tables:
+		# 	keys = self.schema[tbl_name].keys()
+		# 	ids = "SELECT id,data FROM %s" %tbl_name
+		# 	try:
+		# 		for row_id,data in self.cursor.execute(ids):
+		# 			self.data[row_id][tbl_name] = data
+		# 			#print self.data[xid]
+		# 	except sqlite3.OperationalError:
+		# 		#not necessary ???
+		# 		logging.warning("error mapping %s" %tbl_name)
+		# 		pass
+		# self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
 		#self.__close__()
-		return self.json_data
+		#return self.json_data
 
 	def sort_data(self):
-		self.cols = []
-		for items in self.data.values():
-			for col in items.keys() :
-				self.cols.append(col)
-			break
-		self.values = [line.values() for line in self.data.values()]
-		print len(self.cols), len(self.values)
-		return (self.cols, self.values)
+		'''Sorting data in alphabetical order?'''
+		for xid, xvalue in self.data.items():
+			print xid, xvalue
+
+		# self.cols = []
+		# for items in self.data.values():
+		# 	for col in items.keys() :
+		# 		self.cols.append(col)
+		# 	break
+		# self.values = [line.values() for line in self.data.values()]
+		# print len(self.cols), len(self.values)
+		# return (self.cols, self.values)
 
 
 	def writejson2file(self):
-		self.json_data = json.dumps(self.data,sort_keys=False,indent=4)
+		# self.json_data = json.dumps(self.data,sort_keys=False,indent=4)
 		with open(self.name+".json", "w") as f:
 			print "Writing"
 			f.write(self.json_data)
@@ -156,7 +175,6 @@ class Db(object):
 
 	def send2MongoDB(self):
 		db = Database(self.name)
-
 		for row in self.data:
 			db.data.insert(row)
 		return db.name
@@ -187,9 +205,13 @@ class Db(object):
 		return self.tables
 
 
-# def main():
-# 	db = DBConvertor("./cop-clean.db")
-# 	db.__connect__()
-# 	db.select_tables()
-# 	db.convert()
-# main()
+def main():
+	db = Db("./cop-clean.db")
+	db.__connect__()
+	db.select_tables()
+	db.build_schema()
+	db.convert()
+	#db.sort_data()
+
+	#db.convert()
+main()
