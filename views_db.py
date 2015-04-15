@@ -36,8 +36,10 @@ def get_data(db_name):
     db.__connect__()
     db.select_tables()
     db.build_schema()
-    db.convert()
-    return template('json_simple', db = db)
+    if db.convert():
+        return template('json_simple', db = db)
+    else:
+        return template('404', db = db)
 
 run(host='localhost', port=8000)
 # get_data("cop-clean.db")
