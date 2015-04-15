@@ -37,8 +37,7 @@ class Db(object):
 			try:
 				#using Database Object
 				self.conn = Database(self.db_name)
-				self.cursor = self.conn['data']
-
+				self.cursor = self.conn.use_coll("data")
 				#self.conn = MongoClient('mongodb://localhost,localhost:27017')
 				#self.cursor = self.conn[str(self.db_name)]
 				print self.cursor
