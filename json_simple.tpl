@@ -58,7 +58,7 @@
         </tfoot>
         <tbody>
           %for xrow, row in data:
-          <tr id="#{{xrow}}">
+          <tr rid="#{{xrow}}">
             %for id, data in row.items():
             <td class=".{{id}}">
               {{data}}
