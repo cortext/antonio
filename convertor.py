@@ -20,10 +20,6 @@ class Db(object):
 		if path_name[-1] == "db":
 			self.type = "sqlite"
 			self.filter = set(["data", "id", "rank", "parse_rank"])
-		self.__connect__()
-		self.select_tables()
-		self.build_schema()
-		self.convert()
 
 	def __connect__(self):
 		'''retrieving cursor for database'''
@@ -39,9 +35,14 @@ class Db(object):
 				return False
 		else:
 			try:
-				self.conn = MongoClient('mongodb://localhost,localhost:27017')
-				self.cursor = self.conn[str(self.db_name)]
-				logging.info("Connection activated. Please ")
+				#using Database Object
+				self.conn = Database(self.db_name)
+				self.cursor = self.conn['data']
+
+				#self.conn = MongoClient('mongodb://localhost,localhost:27017')
+				#self.cursor = self.conn[str(self.db_name)]
+				print self.cursor
+				logging.info("Connection activated. Please HOLD ON!")
 				return (self.conn, self.cursor)
 			except:
 				logging.warning("Failed to connect to dbfile %s. No such a file" %self.db_path)
@@ -66,9 +67,10 @@ class Db(object):
 				return False
 
 	def build_schema(self):
+		sorted_keys = OrderedDict()
 		if self.type == "sqlite":
 			logging.info("building db schema from sqlite to JSON")
-			self.schema = defaultdict(OrderedDict())
+			self.schema = defaultdict(sorted_key)
 			for table in self.tables:
 				cmd = "SELECT sql from sqlite_master WHERE type = 'table' and name = '%s';" %table
 				keys = [line[0] for line in self.cursor.execute(cmd)]
