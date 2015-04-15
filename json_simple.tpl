@@ -8,6 +8,7 @@
     <meta name="author" content="Constance de Quatrebarbes">
     <title>Antonio DEMO</title>
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="simple.css">
     <link href="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.css" rel="datatable">
     <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
     <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
@@ -32,39 +33,41 @@
     </script>
     </head>
     <body>
-        <div class="container">
-            <div class="row" class="col-lg-12">
-              <div class="page-header">
-                  <h1>ANTONIO: Explore project {{db_name}}</h1>
-              </div>
-            </div>
-    <table id="example" class="display" width="100%" cellspacing="0">
-        <thead>
-            <tr>
-                %for col,items in data.items():
-                  %for n in items.keys():
-                    <th>{{n}}</th>
-                %end
-            </tr>
-        </thead>
-        <table>
+    <%
+    data = [data for data in db.data.items()]
+    head = data[0][1].keys()
+    %>
 
-        <tbody>
+    <table id="example" class="display" width="90%" cellspacing="0">
+
+        <thead>
+          %for h in head:
+            <th>
+              {{h}}
+            </th>
+          %end
+        </thead>
+        <tfoot>
           <tr>
-            %for col, items in data.items():
-              % for n in items.values():
-                <td id={{col}}>{{n}}</td>
-              %end
+            %for h in head:
+              <th>
+                {{h}}
+              </th>
+            %end
+        </tr>
+        </tfoot>
+        <tbody>
+          %for xrow, row in data:
+          <tr id="#{{xrow}}">
+            %for id, data in row.items():
+            <td class=".{{id}}">
+              {{data}}
+            </td>
+            %end
           </tr>
           %end
         </tbody>
-        <tfoot>
-            <tr>
-              %for th in data.keys():
-              <th>{{th}}</th>
-              %end
-            </tr>
-        </tfoot>
+
     </table>
   </div>
 </body>

@@ -125,31 +125,30 @@ class Db(object):
 		'''create json_data and data'''
 		import json
 		logging.info("Convert to JSON")
+		data = defaultdict(dict)
 		self.data = defaultdict(dict)
 		self.filter_tables()
 		tbls = ",".join(self.schema.keys())
 		first_value = self.schema.keys()[0]
-		ids = "SELECT * FROM %s GROUP BY %s INNER JOIN" %(first_value,first_value, tbls, first_value)
-		try:
-			for data in self.cursor.execute(ids):
-				print data
-		except Exception as e:
-			print e
-			pass
-		# for tbl_name in self.tables:
-		# 	keys = self.schema[tbl_name].keys()
-		# 	ids = "SELECT id,data FROM %s" %tbl_name
-		# 	try:
-		# 		for row_id,data in self.cursor.execute(ids):
-		# 			self.data[row_id][tbl_name] = data
-		# 			#print self.data[xid]
-		# 	except sqlite3.OperationalError:
-		# 		#not necessary ???
-		# 		logging.warning("error mapping %s" %tbl_name)
-		# 		pass
-		# self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
-		#self.__close__()
-		#return self.json_data
+		for table in self.tables:
+			cmd = "SELECT id,data FROM %s " %(table)
+			try:
+				for row_id,d in self.cursor.execute(cmd):
+					data[row_id][table] = d
+
+					#print self.data[xid]
+			except sqlite3.OperationalError:
+				#not necessary ???
+				logging.warning("error mapping %s" %table)
+				pass
+
+		for xid, d in data.items():
+			self.data[xid] = OrderedDict(sorted(d.items()))
+
+		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
+		self.__close__()
+
+		return self.json_data
 
 	def sort_data(self):
 		'''Sorting data in alphabetical order?'''
@@ -203,15 +202,3 @@ class Db(object):
 				return False
 			#self.tables_list = self.cursor.distinct("table")
 		return self.tables
-
-
-def main():
-	db = Db("./cop-clean.db")
-	db.__connect__()
-	db.select_tables()
-	db.build_schema()
-	db.convert()
-	#db.sort_data()
-
-	#db.convert()
-main()
