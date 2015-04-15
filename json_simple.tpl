@@ -7,37 +7,27 @@
     <meta name="description" content="Cortext Lab Toolbox">
     <meta name="author" content="Constance de Quatrebarbes">
     <title>Antonio DEMO</title>
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="simple.css">
-    <link href="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.css" rel="datatable">
-    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
-    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-    <!--<script src="/static/assets/js/ie-emulation-modes-warning.js"></script>-->
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <!-- jquery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <!-- datatables -->
-    <script src="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.js"></script>
-    <script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" language="javascript" src="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.js"></script>
-    <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.6/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" charset="utf-8">
-    $(document).ready(function() {
-    $('#example').dataTable();
-      } );
-    </script>
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/dataTables.bootstrap.css">
+		<script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+		<script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.3/js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="/static/dataTables.bootstrap.js"></script>
+    <script type="text/javascript" language="javascript" src="/static/dataTables.bootstrap.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			$(document).ready(function() {
+				$('#example').DataTable();
+			} );
+		</script>
     </head>
     <body>
-    <%
-    data = [data for data in db.data.items()]
-    head = data[0][1].keys()
-    %>
-
+      <div class="container">
+      <div class="content">
+        <h1> Explore {{db.name}}</h1>
+        <%
+        data = [data for data in db.data.items()]
+        head = data[0][1].keys()
+        %>
+      </div>
     <table id="example" class="display" width="90%" cellspacing="0">
 
         <thead>
@@ -60,7 +50,7 @@
           %for xrow, row in data:
           <tr rid="#{{xrow}}">
             %for id, data in row.items():
-            <td class=".{{id}}">
+            <td class=".{{id}} center">
               {{data}}
             </td>
             %end
@@ -69,6 +59,6 @@
         </tbody>
 
     </table>
-  </div>
+</div>
 </body>
 </html>
