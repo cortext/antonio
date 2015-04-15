@@ -2,28 +2,28 @@
 # -*- coding: utf-8 -*-
 #file:convertor.py
 
-import sys
+import sys, os
 import re, sqlite3
 from sqlite3 import *
 import logging
-from collections import defaultdict
+from database import Database
+from collections import defaultdict, OrderedDict
 logger = logging.getLogger(__name__)
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(file="corpus_expo.log", format=FORMAT, level=logging.INFO)
 
 class Db(object):
-	def __init__(self, filepath):
+	def __init__(self, filepath, name=None):
 		self.db_path = filepath
-
-		path_name = self.db_path.split(".")
-
+		path_name = re.split(re.compile("\.|\/"), self.db_path)
+		self.name = path_name[-2]
 		if path_name[-1] == "db":
 			self.type = "sqlite"
-			self.filter = set(["data", "id"])
-		else:
-			self.type = "json"
-		path_name.pop(-1)
-		self.name = (" ").join(path_name)
+			self.filter = set(["data", "id", "rank", "parse_rank"])
+		self.__connect__()
+		self.select_tables()
+		self.build_schema()
+		self.convert()
 
 	def __connect__(self):
 		'''retrieving cursor for database'''
@@ -53,10 +53,22 @@ class Db(object):
 			logging.info("Closing connection to db %s" %self.db_path)
 			return self.conn.close()
 
+	def exists(self):
+		''' check if JSON version has already been created '''
+		db = Database(self.name)
+		try:
+			if db.data.count() > 0:
+				return True
+		except AttributeError:
+			if os.path.isfile(self.name+".json"):
+				return True
+			else:
+				return False
+
 	def build_schema(self):
 		if self.type == "sqlite":
 			logging.info("building db schema from sqlite to JSON")
-			self.schema = defaultdict(dict)
+			self.schema = defaultdict(OrderedDict())
 			for table in self.tables:
 				cmd = "SELECT sql from sqlite_master WHERE type = 'table' and name = '%s';" %table
 				keys = [line[0] for line in self.cursor.execute(cmd)]
@@ -96,13 +108,17 @@ class Db(object):
 	def convert(self):
 		logging.info("Convert")
 		if self.type == "sqlite":
-			return self.convert2json()
+			if self.exists() is False:
+				return self.convert2json()
+			else:
+				self.send2MongoDB()
 		else:
 			return self.convert2sqlite()
+
 	def convert2json(self):
 		import json
 		logging.info("Convert to JSON")
-		self.data = defaultdict(dict)
+		self.data = defaultdict(OrderedDict())
 		self.filter_tables()
 		for tbl_name in self.tables:
 			#keys = self.schema[tbl_name].keys()
@@ -115,14 +131,35 @@ class Db(object):
 				#not necessary ???
 				logging.warning("error mapping %s" %tbl_name)
 				pass
-
-		self.json_data = json.dumps(self.data,sort_keys=False,indent=4)
-		with open(self.name, "w") as f:
-			f.write(self.json_data)
-
-		#self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
+		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
 		#self.__close__()
-		return self.data
+		return self.json_data
+
+	def sort_data(self):
+		self.cols = []
+		for items in self.data.values():
+			for col in items.keys() :
+				self.cols.append(col)
+			break
+		self.values = [line.values() for line in self.data.values()]
+		print len(self.cols), len(self.values)
+		return (self.cols, self.values)
+
+
+	def writejson2file(self):
+		self.json_data = json.dumps(self.data,sort_keys=False,indent=4)
+		with open(self.name+".json", "w") as f:
+			print "Writing"
+			f.write(self.json_data)
+		return self.name
+
+	def send2MongoDB(self):
+		db = Database(self.name)
+
+		for row in self.data:
+			db.data.insert(row)
+		return db.name
+
 
 	def convert2sqlite(self):
 		logging.info("building db values to SQLITE")
@@ -140,7 +177,7 @@ class Db(object):
 				return False
 		else:
 			#to verify
-			for t in (self.cursor.find()).iterkeys():
+			for t in (self.cursor.data.find()).iterkeys():
 				self.tables.append(t)#to verify
 			if len(self.tables)  == 0:
 				logging.warning("Database is empty!")

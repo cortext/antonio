@@ -17,14 +17,7 @@ result_path = os.path.join(PROJECT_PATH,'data')
 def get_data(db_name):
     db_new = os.path.join(PROJECT_PATH, db_name)
     db = Db(db_new)
-    db.__connect__()
-    db.select_tables()
-    db.convert()
-    # for col, items in db.data.items():
-    #     for n in items.values():
-    #         print n
-    #     break
-    return template('json_simple', data = db.data, db_name = db_name)
+    return template('json_simple', db = db)
 
 run(host='localhost', port=8080)
 # get_data("cop-clean.db")
