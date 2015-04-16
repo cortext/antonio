@@ -21,7 +21,7 @@ function GetItems()
   if (xmlhttp.readyState==4 && xmlhttp.status==200) {
     // var jsonobj = eval ("(" + xmlhttp.responseText + ")");
     var jsonobj = JSON.parse(xmlhttp.responseText);
-    document.getElementById("raw").innerHTML = output;
+    document.getElementById("example").innerHTML = output;
 
 
     //output = "";
