@@ -31,6 +31,8 @@ function GetItems()
     //  output += i + " : " + jsonobj[i];
     //  output += '</p>';
     //}
+    var dbname = {{dbname}};
+    alert({{dbname}});
     document.getElementById("forin").innerHTML = output;
     $(document).ready(function() {
         $('#example').dataTable( {
@@ -50,7 +52,7 @@ function GetItems()
 xmlhttp.onload = GetItems;
 
 // send the request in an async way
-var data_url = "/{{dbname}}/getallitems.json"
+var data_url = "/test/getallitems.json"
 xmlhttp.open("GET", data_url, true);
 xmlhttp.send();
 
