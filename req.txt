@@ -1,0 +1,4 @@
+Beaker==1.6.5.post1
+bottle==0.12.8
+pymongo==3.0
+pysqlite==2.6.3
