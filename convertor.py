@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 #file:convertor.py
+__name__="convertor"
 
 import sys, os
 import re, sqlite3
@@ -11,6 +12,10 @@ from collections import defaultdict, OrderedDict
 logger = logging.getLogger(__name__)
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(file="corpus_expo.log", format=FORMAT, level=logging.INFO)
+# # Project configuration # #
+PROJECT_PATH = os.getcwd()
+data_path = os.path.join(PROJECT_PATH,'data_store')
+from pymongo import errors as pymerrors
 
 class Db(object):
 	def __init__(self, filepath, name=None):
@@ -23,10 +28,16 @@ class Db(object):
 			self.filter = set(["data", "id", "rank", "parse_rank"])
 		else:
 			self.type = "json"
-			
+		if self.exists():
+			print "Convert already done"
+		else:
+			self.__connect__()
+			self.build_schema()
+			self.convert()
+			self.store()
+
 	def __connect__(self):
 		'''retrieving cursor for database'''
-
 		logging.info("Connecting to db %s" %self.db_path)
 		if self.type == "sqlite":
 			try:
@@ -62,15 +73,15 @@ class Db(object):
 	def exists(self):
 		''' check if JSON version has already been created '''
 		logging.info("Checking if Db already exists")
-		db = Database(self.name)
-		try:
-			if db.data.count() > 0:
-				return True
-		except AttributeError:
-			if os.path.isfile(self.name+".json"):
-				return True
-			else:
-				return False
+		self.mongo_db = Database(self.name)
+		self.mongo_db.schema = self.mongo_db.use_coll("schema")
+		print self.mongo_db.use_coll("schema")
+		if self.mongo_db.schema.count() > 0:
+			self.cursor = self.mongo_db
+			return True
+		else:
+			print "No MONGO db"
+			return False
 
 	def build_schema(self):
 		'''build schema information from SQLITE'''
@@ -89,7 +100,7 @@ class Db(object):
 					if values is not None:
 						for n in re.finditer("(\s)?(?P<key>\w*)\s(?P<type>\w*)", values):
 							self.schema[table][n.group('key')] = n.group('type')
-			print "KEYS\n"
+			print "Successfully built schema!"
 			return self.schema
 		if self.type == "json":
 			logging.info("building db schema from JSON to sqlite")
@@ -205,3 +216,21 @@ class Db(object):
 				return False
 			#self.tables_list = self.cursor.distinct("table")
 		return self.tables
+	def store(self):
+		self.db = Database(self.name)
+		self.db.create_colls(["data", "schema"])
+		try:
+			self.db.schema.insert(self.schema)
+		except pymerrors.DuplicateKeyError:
+			logging.info("schema exists already")
+		try:
+			for key,value in self.data.items():
+				if self.db.data.find_one({str(key): value}) is None:
+					self.db.data.insert({str(key): value})
+
+			logging.info("%i items in db" %self.db.data.count())
+		except Exception as e:
+			print e
+
+if __name__=="convertor":
+	Db(data_path+"/algues.db")
