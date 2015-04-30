@@ -21,7 +21,9 @@ class Db(object):
 		if path_name[-1] == "db":
 			self.type = "sqlite"
 			self.filter = set(["data", "id", "rank", "parse_rank"])
-
+		else:
+			self.type = "json"
+			
 	def __connect__(self):
 		'''retrieving cursor for database'''
 
@@ -129,26 +131,27 @@ class Db(object):
 		self.data = defaultdict(dict)
 		self.filter_tables()
 		tbls = ",".join(self.schema.keys())
-		first_value = self.schema.keys()[0]
-		for table in self.tables:
-			cmd = "SELECT id,data FROM %s " %(table)
-			try:
-				for row_id,d in self.cursor.execute(cmd):
-					data[row_id][table] = d
+		try:
+			first_value = self.schema.keys()[0]
+			for table in self.tables:
+				cmd = "SELECT id,data FROM %s " %(table)
+				try:
+					for row_id,d in self.cursor.execute(cmd):
+						data[row_id][table] = d
+						#print self.data[xid]
+				except sqlite3.OperationalError:
+					#not necessary ???
+					logging.warning("error mapping %s" %table)
+					pass
 
-					#print self.data[xid]
-			except sqlite3.OperationalError:
-				#not necessary ???
-				logging.warning("error mapping %s" %table)
-				pass
+			for xid, d in data.items():
+				self.data[xid] = OrderedDict(sorted(d.items()))
 
-		for xid, d in data.items():
-			self.data[xid] = OrderedDict(sorted(d.items()))
-
-		self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
-		self.__close__()
-
-		return self.json_data
+			self.json_data = json.dumps(self.data, sort_keys=True,indent=4)
+			self.__close__()
+			return self.json_data
+		except IndexError:
+			return False
 
 	def sort_data(self):
 		'''Sorting data in alphabetical order?'''
