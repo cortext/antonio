@@ -86,38 +86,14 @@ def antonio(hashkey):
     config["hashkey"] = hashkey
     config["locked"] = True
     if config["locked"]:
+        build_template(config)
+        #post data
         #template edit
         return redirect("/edit/"+config["hashkey"]+"/"+config["db_name"])
     else:
         #template view
         return redirect("/view/"+config["hashkey"]+"/"+config["db_name"])
             
-    
-        
-    
-def antonio(access_token=None, hashkey=None, callback_json=None, callback_url=None):
-    '''main process of the app antonio
-    
-    '''
-    
-    #1. appel oauth: demande de droit d'accès
-    #user =  get_oauth(access_token)
-    #2. appel à assets: demande droit de modification (read-only, read-and-write)
-    #locked = lock_file(hashkey, token)
-    #3. appel à assets: récupérer les metadonnées du fichier pour le nom de la base et le nom des tables
-    #http://assets.cortext.net/docs/f7ef64c1ded0dc2f831ec34089ffc2d2
-    metadata = get_metadata(hashkey="f7ef64c1ded0dc2f831ec34089ffc2d2", access_token=None)
-    #~ for k, v in metadata.items():
-        #~ print k, v
-    
-    
-    
-    #4. appels à assets: récupérer la base de données et la renommer
-    data = get_data(hashkey="f7ef64c1ded0dc2f831ec34089ffc2d2",db=db_name)
-    #precharger le template
-    
-    return template("datatables.tpl", metadata = info_db, db=db_name)
-
     
 def get_oauth(token):
     '''get authorized access to modification'''
@@ -234,12 +210,26 @@ def convert(filename):
     data = db.convert2json()
     return data
 
+def build_template(config):
+    db_name = os.path.join(data_store, db_name)
+    data = convert(db_name)
+    
+
+@post('/edit/<hashkey>/<db_name>')
+def post_data():
+    data = convert(db_name)
+    return template('test.tpl', request=request)
+     
 @get('/edit/<hashkey>/<db_name>')
 def edit_data(hashkey, db_name):
     db_name = os.path.join(data_store, db_name)
     data = convert(db_name)
-    #ici charger le template spécifique
-    return data
+    #~ for k, v in data.items():
+        #~ print k, v
+    #~ print [v.values() for k, v in data.items()]
+    #~ #ici charger le template spécifique
+    #~ return [v.values() for k, v in data.items()]
+    return template('index.tpl', request=request)
     
 @get('/view/<hashkey>/<db_name>')
 def view_data(hashkey, db_name):
