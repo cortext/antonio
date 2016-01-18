@@ -13,8 +13,11 @@ from api import *
 import json
 from bson.json_util import dumps
 #Templating system
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, PackageLoader
 jinja2_env = Environment(loader=FileSystemLoader('views/'))
+env = Environment(loader=PackageLoader('app', 'templates'))
+#~ env.filters['jsonify'] = json.dumps
+
 
 def serve_template(templatename, **kwargs):
     t = jinja2_env.get_template(templatename)
@@ -22,18 +25,46 @@ def serve_template(templatename, **kwargs):
 
 
 from convert import *
+
+#~ @bottle.hook('after_request')
+#~ def enable_cors():
+    #~ response.headers['Access-Control-Allow-Origin'] = '*'
+
+@bottle.get('/test')
+def test_ajax(db_name = "tabac.db"):
+    db_path = os.path.join(bottle.data_store, db_name)
+    c = Connector(db_path)
+    #~ if not c.db_exists():
+        #~ c.convert()
     
-@bottle.get('/static/:filename#.*#')
-def serve_static(filename):
+    #~ print c["data"].find_one({},{"_id": False}), type(c.data.find_one({},{"_id": False}))
+    #return serve_template("view_db.tpl", db_name=db_name, columns = c.header, data = [n for n in c.data.find({},{"_id":False})])
+    return serve_template("view_db.tpl", db_name=db_name, columns = c.header)
+    
+@bottle.get('/static/<filename>')
+def serve_js(filename):
     return static_file(filename, root='static')
+
+@bottle.get('/static/js/<filename>')
+def serve_css(filename):
+    return static_file(filename, root='static/js')
 
 
 @bottle.get("/load/<db_name>")
 def serve_data(db_name):
+    '''AJAX POST '''
+    if db_name[-3:] == ".db":
+        pass
+    else:
+        print "Normalize" 
+        db_name = db_name+".db"
+        
     #name = db_name.replace(".db", "")
     db_path = os.path.join(bottle.data_store, db_name)
     c = Connector(db_path)
-    return dumps({"data":[n for n in c.data.find({},{"_id":False})]})
+    #print {"data":[n for n in c.data.find({},{"_id":False})]}
+    bottle.response.content_type = 'application/json'
+    return dumps([n for n in c.data.find({},{"_id":False})])
     
 @bottle.get("/edit/<hashkey>")
 def antonio(hashkey):
@@ -57,21 +88,31 @@ def antonio(hashkey):
     locked = False
     #3. appel à assets: récupérer les metadonnées du fichier pour le nom de la base et le nom des tables
     #http://assets.cortext.net/docs/f7ef64c1ded0dc2f831ec34089ffc2d2
-    config = get_metadata(hashkey, access_token)
-    config = json.loads(config)
+    #config = {"db_name":"tabac.db", "acess_token": access_token, "locked": locked}
+    #return #redirect("/view_db/"+str(config["db_name"]))
+    #return serve_template("ajax_1.tpl", db_name=config["db_name"], header=["test", "test2"])
     
+    config = get_metadata(hashkey, access_token)
+    try:
+        config = json.loads(config)
+    except TypeError:
+        
+        #print config
+        return config
+        
     if config["status"] == True:
         config = get_data(hashkey,config, access_token=None)
         config = json.loads(config)
-        print config["status"]
+        #print config["status"]
         if config["status"]:
-            print "OK"
+            #print "OK"
             if locked:
-                print "VIEW"
+                #print "VIEW"
                 #return config
+                
                 return redirect("/view_db/"+str(config["db_name"]))
             else:
-                print "EDIT"
+                #print "EDIT"
                 return redirect("/edit_db/"+str(config["db_name"]))
                 
         else:
@@ -79,33 +120,27 @@ def antonio(hashkey):
             return config
     else:
         return config
-
+    
 @bottle.route("/edit_db/<filename>")
 def edit_db(filename):
     db_name = re.sub(".db", "", filename)
     db_path = os.path.join(bottle.data_store, filename)
     c = Connector(db_path)
-    if c.db_exists():
-        pass
-    else:
+    if not c.db_exists():
         c.convert()
-    data = c.get_data()
-    header = c.get_header()
-    config = c.get_config()
-    return serve_template("test.html", data = {"filename":filename, "header":header, "data":data, "config":config})
+    
+    return serve_template("view_db.tpl", db_name=db_name, columns = c.header, row = c.data.find_one({"_id": False}))
+    
 @bottle.route("/view_db/<filename>")
 def view_db(filename):
-    db_name = re.sub(".db", "", filename)
+    db_name = filename.replace(".db", "")
     db_path = os.path.join(bottle.data_store, filename)
     c = Connector(db_path)
     if c.db_exists():
         pass
     else:
         c.convert()
-    data = c.get_data()
-    header = c.get_header()
-    config = c.get_config()
-    return serve_template("test.html",filename, header, data, config)
+    return serve_template("view_db.tpl", db_name=db_name, columns = c.header)
 
 @bottle.get("/update/<db_name>/<doc_id>")
 def update(db_name, doc_id):
@@ -152,5 +187,4 @@ def add_col(db_name, doc_id):
     if doc  > 0:
         return True
     return False
-
 
